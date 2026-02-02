@@ -17,12 +17,13 @@ pub fn generate_complex_type(
     output.push_str(&format!("/// Generated from XSD complexType: {}\n", name));
 
     // Derives - add Default for empty types
-    let is_empty = complex_type.sequence.is_none()
+    let is_empty = (complex_type.sequence.is_none()
         || complex_type
             .sequence
             .as_ref()
             .map(|s| s.elements.is_empty())
-            .unwrap_or(true);
+            .unwrap_or(true))
+        && complex_type.attributes.is_empty();
 
     // Derives: Always use PartialEq (not Eq) to avoid issues with floats
     // in nested types that we might not detect recursively
@@ -40,6 +41,28 @@ pub fn generate_complex_type(
 
     // Struct definition
     output.push_str(&format!("pub struct {} {{\n", struct_name));
+
+    // Fields from attributes (XML attributes use @ prefix in serde)
+    for attr in &complex_type.attributes {
+        let field_name = to_snake_case(&attr.name);
+        let sanitized_field_name = super::sanitize_identifier(&field_name);
+
+        // Attributes are always optional unless use="required"
+        let rust_type = if attr.use_ == crate::parser::AttributeUse::Required {
+            type_mapper.map_type(&attr.type_)
+        } else {
+            format!("Option<{}>", type_mapper.map_type(&attr.type_))
+        };
+
+        // XML attributes need @ prefix in serde rename
+        output.push_str(&format!("    #[serde(rename = \"@{}\")]\n", attr.name));
+
+        // Field definition
+        output.push_str(&format!(
+            "    pub {}: {},\n",
+            sanitized_field_name, rust_type
+        ));
+    }
 
     // Fields from sequence
     if let Some(seq) = &complex_type.sequence {
@@ -204,6 +227,7 @@ pub fn generate_operation_method(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parser::{Attribute, AttributeUse};
     use crate::parser::{ComplexType, PortTypeOperation, QName, Sequence, SequenceElement};
 
     #[test]
@@ -338,6 +362,61 @@ mod tests {
         assert!(code.contains("pub message: String"));
         assert!(code.contains("#[serde(rename = \"Code\")]"));
         assert!(code.contains("#[serde(rename = \"Message\")]"));
+    }
+
+    #[test]
+    fn test_generate_struct_with_attributes() {
+        let complex_type = ComplexType {
+            sequence: Some(Sequence {
+                elements: vec![],
+            }),
+            attributes: vec![
+                Attribute {
+                    name: "key".to_string(),
+                    type_: QName::new("xs:string"),
+                    use_: AttributeUse::Optional,
+                },
+                Attribute {
+                    name: "value".to_string(),
+                    type_: QName::new("xs:string"),
+                    use_: AttributeUse::Optional,
+                },
+            ],
+            ..Default::default()
+        };
+
+        let type_mapper = TypeMapper::new();
+        let code = generate_complex_type("MapElements", &complex_type, &type_mapper).unwrap();
+
+        assert!(code.contains("pub struct MapElements"));
+        assert!(code.contains("#[serde(rename = \"@key\")]"));
+        assert!(code.contains("pub key: Option<String>"));
+        assert!(code.contains("#[serde(rename = \"@value\")]"));
+        assert!(code.contains("pub value: Option<String>"));
+        // Should not have Default derive when attributes present
+        assert!(!code.contains("Default"));
+    }
+
+    #[test]
+    fn test_generate_struct_with_required_attribute() {
+        let complex_type = ComplexType {
+            sequence: None,
+            attributes: vec![Attribute {
+                name: "id".to_string(),
+                type_: QName::new("xs:string"),
+                use_: AttributeUse::Required,
+            }],
+            ..Default::default()
+        };
+
+        let type_mapper = TypeMapper::new();
+        let code = generate_complex_type("Entity", &complex_type, &type_mapper).unwrap();
+
+        assert!(code.contains("pub struct Entity"));
+        assert!(code.contains("#[serde(rename = \"@id\")]"));
+        // Required attributes should not be wrapped in Option
+        assert!(code.contains("pub id: String"));
+        assert!(!code.contains("pub id: Option<String>"));
     }
 
     #[test]

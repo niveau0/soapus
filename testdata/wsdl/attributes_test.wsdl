@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+    name="AttributesTestService"
+    targetNamespace="http://example.com/attributes"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="http://example.com/attributes"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <types>
+        <xs:schema targetNamespace="http://example.com/attributes" elementFormDefault="qualified">
+
+            <!-- ComplexType with XML attributes -->
+            <xs:complexType name="mapElements">
+                <xs:sequence/>
+                <xs:attribute name="key" type="xs:string"/>
+                <xs:attribute name="value" type="xs:string"/>
+            </xs:complexType>
+
+            <!-- ComplexType with required attribute -->
+            <xs:complexType name="Entity">
+                <xs:sequence>
+                    <xs:element name="name" type="xs:string"/>
+                </xs:sequence>
+                <xs:attribute name="id" type="xs:string" use="required"/>
+                <xs:attribute name="version" type="xs:int"/>
+            </xs:complexType>
+
+            <!-- ComplexType with both elements and attributes -->
+            <xs:complexType name="Product">
+                <xs:sequence>
+                    <xs:element name="description" type="xs:string"/>
+                    <xs:element name="price" type="xs:decimal"/>
+                </xs:sequence>
+                <xs:attribute name="sku" type="xs:string" use="required"/>
+                <xs:attribute name="category" type="xs:string"/>
+            </xs:complexType>
+
+            <!-- Request/Response messages -->
+            <xs:element name="GetEntityRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="entityId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="GetEntityResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="entity" type="tns:Entity"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="GetProductRequest">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="sku" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="GetProductResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="product" type="tns:Product"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+        </xs:schema>
+    </types>
+
+    <message name="GetEntityRequestMessage">
+        <part name="parameters" element="tns:GetEntityRequest"/>
+    </message>
+
+    <message name="GetEntityResponseMessage">
+        <part name="parameters" element="tns:GetEntityResponse"/>
+    </message>
+
+    <message name="GetProductRequestMessage">
+        <part name="parameters" element="tns:GetProductRequest"/>
+    </message>
+
+    <message name="GetProductResponseMessage">
+        <part name="parameters" element="tns:GetProductResponse"/>
+    </message>
+
+    <portType name="AttributesTestPortType">
+        <operation name="GetEntity">
+            <input message="tns:GetEntityRequestMessage"/>
+            <output message="tns:GetEntityResponseMessage"/>
+        </operation>
+        <operation name="GetProduct">
+            <input message="tns:GetProductRequestMessage"/>
+            <output message="tns:GetProductResponseMessage"/>
+        </operation>
+    </portType>
+
+    <binding name="AttributesTestBinding" type="tns:AttributesTestPortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="GetEntity">
+            <soap:operation soapAction="http://example.com/attributes/GetEntity"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+        <operation name="GetProduct">
+            <soap:operation soapAction="http://example.com/attributes/GetProduct"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+
+    <service name="AttributesTestService">
+        <documentation>Test service with XML attributes</documentation>
+        <port name="AttributesTestPort" binding="tns:AttributesTestBinding">
+            <soap:address location="http://example.com/attributes"/>
+        </port>
+    </service>
+
+</definitions>

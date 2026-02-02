@@ -43,6 +43,8 @@ pub struct ComplexType {
     pub all: Option<All>,
     // For extensions and restrictions
     pub base_type: Option<QName>,
+    // XML attributes
+    pub attributes: Vec<Attribute>,
 }
 
 /// A sequence of elements (ordered)
@@ -109,4 +111,26 @@ pub struct Choice {
 #[derive(Debug, Default, Clone)]
 pub struct All {
     pub elements: Vec<SequenceElement>,
+}
+
+/// An XML attribute definition
+#[derive(Debug, Default, Clone)]
+pub struct Attribute {
+    pub name: String,
+    pub type_: QName,
+    pub use_: AttributeUse,
+}
+
+/// Whether an attribute is required or optional
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AttributeUse {
+    Required,
+    Optional,
+    Prohibited,
+}
+
+impl Default for AttributeUse {
+    fn default() -> Self {
+        AttributeUse::Optional
+    }
 }

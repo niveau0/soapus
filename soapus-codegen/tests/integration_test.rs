@@ -143,12 +143,134 @@ fn test_generate_from_numberconversion_wsdl() {
 }
 
 #[test]
+fn test_generate_from_attributes_wsdl() {
+    let dir = tempdir().unwrap();
+
+    // Generate code from Attributes test WSDL
+    let result = SoapClientGenerator::builder()
+        .wsdl_path("../testdata/wsdl/attributes_test.wsdl")
+        .out_dir(dir.path())
+        .generate();
+
+    // Should succeed
+    assert!(
+        result.is_ok(),
+        "Attributes test code generation failed: {:?}",
+        result.err()
+    );
+
+    let gen = result.unwrap();
+
+    // Check generated file exists
+    let generated_file = &gen.output_file;
+    assert!(generated_file.exists(), "Generated file not found");
+
+    // Read and verify content
+    let content = fs::read_to_string(generated_file).unwrap();
+
+    // Verify it contains expected elements
+    assert!(
+        content.contains("pub struct"),
+        "Should contain struct definitions"
+    );
+
+    // Check for MapElements struct with attributes
+    assert!(
+        content.contains("pub struct MapElements"),
+        "Should have MapElements type"
+    );
+    assert!(
+        content.contains("#[serde(rename = \"@key\")]"),
+        "Should have @key attribute"
+    );
+    assert!(
+        content.contains("#[serde(rename = \"@value\")]"),
+        "Should have @value attribute"
+    );
+    assert!(
+        content.contains("pub key: Option<String>"),
+        "key should be optional String"
+    );
+    assert!(
+        content.contains("pub value: Option<String>"),
+        "value should be optional String"
+    );
+
+    // Check for Entity struct with required attribute
+    assert!(
+        content.contains("pub struct Entity"),
+        "Should have Entity type"
+    );
+    assert!(
+        content.contains("#[serde(rename = \"@id\")]"),
+        "Should have @id attribute"
+    );
+    assert!(
+        content.contains("pub id: String"),
+        "id should be required String (not Option)"
+    );
+    assert!(
+        content.contains("#[serde(rename = \"@version\")]"),
+        "Should have @version attribute"
+    );
+    assert!(
+        content.contains("pub version: Option<i32>"),
+        "version should be optional i32"
+    );
+    assert!(
+        content.contains("pub name: String"),
+        "Should have name element"
+    );
+
+    // Check for Product struct with both elements and attributes
+    assert!(
+        content.contains("pub struct Product"),
+        "Should have Product type"
+    );
+    assert!(
+        content.contains("#[serde(rename = \"@sku\")]"),
+        "Should have @sku attribute"
+    );
+    assert!(
+        content.contains("pub sku: String"),
+        "sku should be required String"
+    );
+    assert!(
+        content.contains("#[serde(rename = \"@category\")]"),
+        "Should have @category attribute"
+    );
+    assert!(
+        content.contains("pub category: Option<String>"),
+        "category should be optional String"
+    );
+    assert!(
+        content.contains("pub description: String"),
+        "Should have description element"
+    );
+    assert!(
+        content.contains("pub price:"),
+        "Should have price element"
+    );
+
+    // Check for operations
+    assert!(
+        content.contains("pub async fn get_entity"),
+        "Should have get_entity operation"
+    );
+    assert!(
+        content.contains("pub async fn get_product"),
+        "Should have get_product operation"
+    );
+}
+
+#[test]
 fn test_all_wsdls_generate_valid_rust() {
     // Test that all WSDL files generate code that at least compiles syntactically
     let wsdl_files = vec![
         ("../testdata/wsdl/calculator.wsdl", "Calculator"),
         ("../testdata/wsdl/countryinfo.wsdl", "CountryInfo"),
         ("../testdata/wsdl/numberconversion.wsdl", "NumberConversion"),
+        ("../testdata/wsdl/attributes_test.wsdl", "AttributesTest"),
     ];
 
     for (wsdl_path, expected_name) in wsdl_files {

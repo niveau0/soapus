@@ -13,7 +13,8 @@ pub use wsdl::{
 
 pub use xsd::parser::parse_schema;
 pub use xsd::{
-    ComplexType, Restriction, SchemaElement, Sequence, SequenceElement, SimpleType, XmlSchema,
+    Attribute, AttributeUse, ComplexType, Restriction, SchemaElement, Sequence, SequenceElement,
+    SimpleType, XmlSchema,
 };
 
 /// Qualified Name (QName) representation
