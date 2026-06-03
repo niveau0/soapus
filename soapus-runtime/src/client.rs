@@ -239,7 +239,7 @@ impl SoapClient {
 
         // Send request
         #[cfg(feature = "tracing")]
-        info!(endpoint = %self.endpoint, "Sending HTTP POST request");
+        debug!(endpoint = %self.endpoint, "Sending HTTP POST request");
 
         let response = match http_request.send().await {
             Ok(resp) => resp,
@@ -339,7 +339,7 @@ impl SoapClient {
 
         // Send request
         #[cfg(feature = "tracing")]
-        info!(endpoint = %self.endpoint, "Sending HTTP POST request (raw call)");
+        debug!(endpoint = %self.endpoint, "Sending HTTP POST request (raw call)");
 
         let response = match http_request.send().await {
             Ok(resp) => resp,
