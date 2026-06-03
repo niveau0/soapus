@@ -26,7 +26,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # Async Runtime
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.52", features = ["rt-multi-thread", "macros"] }
 
 # HTTP Client
 reqwest = { version = "0.12", features = ["json"] }
@@ -45,4 +45,4 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 # Testing
-tempfile = "3.10"
+tempfile = "3.27"
